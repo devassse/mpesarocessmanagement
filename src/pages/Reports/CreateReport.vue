@@ -422,10 +422,10 @@ const handleFileUpload = (file) => {
     // Building Table Headers
     importedFileColumns.value = json[0].map((col, index) => ({
       id: idCounter++,
-      name: col.toLowerCase(),
+      name: String(col).toLowerCase(),  // OLD Approach col?.toLowerCase(),
       label: capitalize(col),
-      field: col.toLowerCase(),
-      align: "left",
+      field: String(col).toLowerCase(),
+      align: "left" || '',
     }));
 
     // Add a static column at the end
@@ -443,8 +443,8 @@ const handleFileUpload = (file) => {
     importedFileRows.value = excelData.value.slice(1).map((row, index) => {
       const rowData = {};
       importedFileColumns.value.forEach((col, colIndex) => {
-        // If the value is empty, fill it with an empty string ("")
-        rowData[col.field] = row[colIndex] || ""; // Replace empty cells with an empty string
+        // If the value is empty, fill it with an empty string with dashes(" --- ")
+        rowData[col.field] = row[colIndex] || " --- "; // Replace empty cells with an empty string
       });
       return { id: index + 1, ...rowData };
     });

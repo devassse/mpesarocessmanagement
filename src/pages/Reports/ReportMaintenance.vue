@@ -2,7 +2,7 @@
   <q-toolbar class="bg-black text-white">
     <q-toolbar-title>
       <span>
-        {{ reportName || "Report Name" }}
+        {{ reportName || 'Report Name' }}
         <q-popup-edit v-model="reportName" auto-save v-slot="scope">
           <q-input
             type="textarea"
@@ -15,7 +15,7 @@
         </q-popup-edit>
       </span>
       <em
-        >({{ reportMonth.toString() || " --- " }})
+        >({{ reportMonth.toString() || ' --- ' }})
         <q-popup-edit v-model="reportMonth" auto-save v-slot="scope">
           <!-- <q-input type="textarea" rows="3" v-model="scope.value" dense autofocus @keyup.enter="scope.set" /> -->
           <q-select
@@ -34,28 +34,14 @@
     <q-btn flat round dense icon="file_download" @click="exportToExcel(rows)">
       <q-tooltip> Export File </q-tooltip>
     </q-btn>
-    <q-btn flat round dense icon="person">
+    <!-- <q-btn flat round dense icon="person">
       <q-badge floating color="red">2</q-badge>
       <q-tooltip> 2 new modifications </q-tooltip>
-    </q-btn>
-    <q-btn
-      flat
-      round
-      dense
-      icon="table_rows"
-      class="q-mr-xs"
-      @click="addNewRow"
-    >
+    </q-btn> -->
+    <q-btn flat round dense icon="table_rows" class="q-mr-xs" @click="addNewRow">
       <q-tooltip> Add New Row </q-tooltip>
     </q-btn>
-    <q-btn
-      flat
-      round
-      dense
-      icon="save"
-      class="q-mr-xs"
-      @click="saveUpdateReport"
-    >
+    <q-btn flat round dense icon="save" class="q-mr-xs" @click="saveUpdateReport">
       <q-tooltip> Update Report </q-tooltip>
     </q-btn>
     <q-btn flat round dense to="/reports" icon="arrow_back">
@@ -70,10 +56,7 @@
           <!-- Top Description -->
           <div class="row" style="display: flex; align-items: center">
             <div class="col-8">
-              <q-chip
-                text-color="white"
-                icon="warning"
-                style="background-color: #ff1100"
+              <q-chip text-color="white" icon="warning" style="background-color: #ff1100"
                 >Potential Risks</q-chip
               >
             </div>
@@ -106,9 +89,7 @@
           <!-- Top Description -->
           <div class="row" style="display: flex; align-items: center">
             <div class="col-8">
-              <q-chip color="green" text-color="white" icon="group"
-                >New Customers</q-chip
-              >
+              <q-chip color="green" text-color="white" icon="group">New Customers</q-chip>
             </div>
             <div class="col-4" style="text-align: right">
               <q-btn flat size="sm" round color="primary" icon="arrow_right" />
@@ -139,9 +120,7 @@
           <!-- Top Description -->
           <div class="row" style="display: flex; align-items: center">
             <div class="col-8">
-              <q-chip color="blue" text-color="white" icon="phishing"
-                >Fraude monitoring</q-chip
-              >
+              <q-chip color="blue" text-color="white" icon="phishing">Fraude monitoring</q-chip>
             </div>
             <div class="col-4" style="text-align: right">
               <q-btn flat dense round color="primary" icon="arrow_right" />
@@ -186,11 +165,7 @@
         <q-td :props="props">
           <template v-if="props.col.name !== 'actions'">
             {{ formatDisplay(props.value, getFieldType(props.col.name)) }}
-            <q-popup-edit
-              v-model="props.row[props.col.name]"
-              auto-save
-              v-slot="scope"
-            >
+            <q-popup-edit v-model="props.row[props.col.name]" auto-save v-slot="scope">
               <template v-if="getFieldType(props.col.name) === 'date'">
                 <q-date
                   v-model="scope.value"
@@ -203,11 +178,7 @@
 
               <template v-else>
                 <q-input
-                  :type="
-                    getFieldType(props.col.name) === 'number'
-                      ? 'number'
-                      : 'textarea'
-                  "
+                  :type="getFieldType(props.col.name) === 'number' ? 'number' : 'textarea'"
                   rows="3"
                   v-model="scope.value"
                   dense
@@ -254,216 +225,221 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
-import { getSingleReportById, updateReport } from "src/boot/reports";
-import { useRoute } from "vue-router";
-import { useQuasar } from "quasar";
-import * as XLSX from "xlsx";
+import { ref, onMounted } from 'vue'
+import { getSingleReportById, updateReport } from 'src/boot/reports'
+import { useRoute } from 'vue-router'
+import { useQuasar } from 'quasar'
+import * as XLSX from 'xlsx'
 
-const $q = useQuasar();
-const route = useRoute();
-const reportName = ref("");
-const reportMonth = ref("");
+const $q = useQuasar()
+const route = useRoute()
+const reportName = ref('')
+const reportMonth = ref('')
 
-const columns = ref([]);
-const rows = ref([]);
+const columns = ref([])
+const rows = ref([])
 
-let idCounter = 1;
-let progress = ref(16);
+let idCounter = 1
+let progress = ref(16)
 
-const optionsStatus = ["Done", "In Progress", "To Do", "Closed"];
+const optionsStatus = ['Done', 'In Progress', 'To Do', 'Closed']
 
 const addNewRow = () => {
-  const newRow = {};
+  const newRow = {}
   columns.value.forEach((col) => {
-    newRow[col.name] = "---";
-  });
+    newRow[col.name] = '---'
+  })
 
-  rows.value.push(newRow);
-};
+  rows.value.push(newRow)
+}
 
 const removerLinha = (row, index) => {
   // console.log("Row to remove", row);
   // console.log("Row to remove", index);
 
-  rows.value.splice(index, 1);
-};
+  rows.value.splice(index, 1)
+}
 
 const saveUpdateReport = () => {
-  const id = route.params.id;
+  const id = route.params.id
   const report = {
     reportName: reportName.value,
     reportMonth: reportMonth.value,
     fileColumns: columns.value,
     fileRows: rows.value,
-  };
+  }
 
   updateReport(id, report)
     .then((response) => {
       $q.notify({
-        color: "positive",
-        message: "Report updated successfully",
-        icon: "check_circle",
-      });
+        color: 'positive',
+        message: 'Report updated successfully',
+        icon: 'check_circle',
+      })
     })
     .catch((error) => {
       $q.notify({
-        color: "negative",
-        message: "Failed to update Report. Please try again.",
-        icon: "error",
-      });
-      console.error(error);
-    });
-};
+        color: 'negative',
+        message: 'Failed to update Report. Please try again.',
+        icon: 'error',
+      })
+      console.error(error)
+    })
+}
 
 const monthOptions = [
   {
-    label: "January",
-    value: "January",
+    label: 'January',
+    value: 'January',
   },
   {
-    label: "February",
-    value: "February",
+    label: 'February',
+    value: 'February',
   },
   {
-    label: "March",
-    value: "March",
+    label: 'March',
+    value: 'March',
   },
   {
-    label: "April",
-    value: "April",
+    label: 'April',
+    value: 'April',
   },
   {
-    label: "May",
-    value: "May",
+    label: 'May',
+    value: 'May',
   },
   {
-    label: "June",
-    value: "June",
+    label: 'June',
+    value: 'June',
   },
   {
-    label: "July",
-    value: "July",
+    label: 'July',
+    value: 'July',
   },
   {
-    label: "August",
-    value: "August",
+    label: 'August',
+    value: 'August',
   },
   {
-    label: "September",
-    value: "September",
+    label: 'September',
+    value: 'September',
   },
   {
-    label: "October",
-    value: "October",
+    label: 'October',
+    value: 'October',
   },
   {
-    label: "November",
-    value: "November",
+    label: 'November',
+    value: 'November',
   },
   {
-    label: "December",
-    value: "December",
+    label: 'December',
+    value: 'December',
   },
-];
+]
 
 // Utilities Methods
 const getFieldType = (colName) => {
-  const name = colName.toLowerCase();
+  // const name = colName.toLowerCase()
+  const name = typeof colName === 'string' ? colName.toLowerCase() : '';
 
-  if (name.includes("date") || name.includes("data")) {
-    return "date";
+
+  if (name.includes('date') || name.includes('data')) {
+    return 'date'
   }
 
   if (
-    name.includes("amount") ||
-    name.includes("total") ||
-    name.includes("salary") ||
-    name.includes("valor") ||
-    name.includes("preco") ||
-    name.includes("price")
+    name.includes('amount') ||
+    name.includes('total') ||
+    name.includes('salary') ||
+    name.includes('valor') ||
+    name.includes('preco') ||
+    name.includes('price')
   ) {
-    return "number";
+    return 'number'
   }
 
-  return "text";
-};
+  return 'text'
+}
 
 const parseAnyDate = (value) => {
-  if (typeof value !== "string") return new Date(value);
+  if (typeof value !== 'string') return new Date(value)
 
   // Normaliza separadores ("/" → "-")
-  const val = value.trim().replace(/\//g, "-");
+  const val = value.trim().replace(/\//g, '-')
 
   // YYYY-MM-DD → ex: 1988-08-30
   if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
-    const [y, m, d] = val.split("-").map(Number);
-    const date = new Date(y, m - 1, d);
-    return isValidDate(date) ? date : null;
+    const [y, m, d] = val.split('-').map(Number)
+    const date = new Date(y, m - 1, d)
+    return isValidDate(date) ? date : null
   }
 
   // DD-MM-YYYY → ex: 30-08-1988
   if (/^\d{2}-\d{2}-\d{4}$/.test(val)) {
-    const [d, m, y] = val.split("-").map(Number);
-    const date = new Date(y, m - 1, d);
-    return isValidDate(date) ? date : null;
+    const [d, m, y] = val.split('-').map(Number)
+    const date = new Date(y, m - 1, d)
+    return isValidDate(date) ? date : null
   }
 
   // Última tentativa: deixar o Date parser fazer o trabalho
-  const fallback = new Date(val);
-  return isValidDate(fallback) ? fallback : null;
-};
+  const fallback = new Date(val)
+  return isValidDate(fallback) ? fallback : null
+}
 
-const isValidDate = (d) => d instanceof Date && !isNaN(d.getTime());
+const isValidDate = (d) => d instanceof Date && !isNaN(d.getTime())
 
 const formatDisplay = (value, type) => {
-  if (type === "date") {
-    const d = parseAnyDate(value);
+  if (type === 'date') {
+    const d = parseAnyDate(value)
     return d
-      ? new Intl.DateTimeFormat("pt-PT", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
+      ? new Intl.DateTimeFormat('pt-PT', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
         }).format(d)
-      : value;
+      : value
   }
 
-  if (type === "number") {
-    return new Intl.NumberFormat("pt-PT", {
-      style: "currency",
-      currency: "EUR",
-    }).format(Number(value));
+  if (type === 'number') {
+    return new Intl.NumberFormat('pt-PT', {
+      style: 'currency',
+      currency: 'EUR',
+    }).format(Number(value))
   }
 
-  return value;
-};
+  return value
+}
 
 // Export to Excel
 const exportToExcel = () => {
-  const plainRows = rows.value.map((row) => ({ ...row }));
-  const worksheet = XLSX.utils.json_to_sheet(plainRows);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Dados");
-  XLSX.writeFile(workbook, "report.xlsx");
-};
+  const plainRows = rows.value.map((row) => ({ ...row }))
+  const worksheet = XLSX.utils.json_to_sheet(plainRows)
+  const workbook = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Dados')
+  XLSX.writeFile(workbook, 'report.xlsx')
+}
 
 onMounted(async () => {
-  const id = route.params.id;
+  const id = route.params.id
   getSingleReportById(id)
     .then((response) => {
-      console.log("Single Report", response.report);
       //Atribute the response to the variables
-      reportName.value = response.report.reportName || "";
-      reportMonth.value = response.report.reportMonth || "";
+      reportName.value = response.report.reportName || ''
+      reportMonth.value = response.report.reportMonth || ''
 
       //Columns and Rows
-      columns.value = response.report.fileColumns || [];
-      rows.value = response.report.fileRows || [];
+      rows.value = response.report.fileRows || []
+      // columns.value = response.report.fileColumns || [];
+      columns.value = (response.report.fileColumns || []).map((col) => ({
+        align: 'left',
+        ...col,
+      }))
     })
     .catch((error) => {
-      console.error(error);
-    });
-});
+      console.error(error)
+    })
+})
 </script>
 <style lang="sass">
 .sticky-header-table
