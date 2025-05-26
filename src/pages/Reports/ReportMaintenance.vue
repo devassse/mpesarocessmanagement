@@ -341,8 +341,7 @@ const monthOptions = [
 // Utilities Methods
 const getFieldType = (colName) => {
   // const name = colName.toLowerCase()
-  const name = typeof colName === 'string' ? colName.toLowerCase() : '';
-
+  const name = typeof colName === 'string' ? colName.toLowerCase() : ''
 
   if (name.includes('date') || name.includes('data')) {
     return 'date'
@@ -442,6 +441,10 @@ onMounted(async () => {
 })
 </script>
 <style lang="sass">
+.q-table tbody td
+  max-width: 500px !important;
+  white-space: normal !important;
+
 .sticky-header-table
   .q-table__top,
   thead tr:first-child th /* bg color is important for th; just specify one */
