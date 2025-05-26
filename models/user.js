@@ -113,7 +113,7 @@ userSchema.statics.login = async function (email, password) {
     // LDAP Authentication
     // LDAP server configuration
     // dev --- 10.123.187.100
-    const url = 'ldap://192.168.213.175:10389' // Use 'ldaps://' and port 636 if using LDAPS  # Allways use the IP address of the Host
+    const url = 'ldap://192.168.43.117:10389' // Use 'ldaps://' and port 636 if using LDAPS  # Allways use the IP address of the Host
     const client = ldap.createClient({
       url: url,
       timeout: 5000,

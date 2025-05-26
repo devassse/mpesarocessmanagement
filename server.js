@@ -21,6 +21,11 @@ const faceRecogRedirect = require('./routes/face_recognition_redirect/facerecog'
 dotenv.config()
 
 const app = express();
+
+app.use(express.json({ limit: '50mb' }))
+app.use(express.urlencoded({ limit: '50mb', extended: true }))
+
+
 const server = http.createServer(app);
 const io = socketIO(server, {
     cors: {
@@ -38,6 +43,9 @@ app.use(bodyParser.json());
 
 // Middleware to parse URL-encoded requests
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(bodyParser.json({ limit: '50mb' }))
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }))
 app.use(cors());
 app.use("/facerecog",faceRecogRedirect)
 
