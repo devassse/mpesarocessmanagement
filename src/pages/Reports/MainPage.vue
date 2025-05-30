@@ -122,9 +122,7 @@
                 "
               >
                 <span>Groups</span>
-                <q-checkbox v-model="value" label="Owner" color="secondary"/>
-                <q-checkbox v-model="value2" label="ReadOnly" color="secondary"/>
-                <q-checkbox v-model="value3" label="ParcialWritter" color="secondary"/>
+                <q-checkbox v-for="group in groups" v-model="selectedRoles" :key="group.name" :label="group.name" color="secondary"/>
               </div>
               <div
                 class="col-6"
@@ -178,6 +176,7 @@
 import { onMounted, ref } from 'vue'
 import images from 'src/boot/images'
 import { getAllReports, deleteReport } from 'src/boot/reports'
+import { getAllGroups } from 'boot/roles'
 import Cookies from 'js-cookie'
 import { useQuasar } from 'quasar'
 
@@ -198,6 +197,9 @@ const isAuditor = ref(false)
 const reportName = ref('')
 const reportId = ref('')
 const isDeleteReport = ref(false)
+
+const groups = ref([])
+const selectedRoles = ref([])
 
 const communsRows = ref([])
 const columns = [
@@ -324,13 +326,12 @@ const fetchAllReports = () => {
   getAllReports()
     .then((response) => {
       communsRows.value = response.reports
-
       rows.value = communsRows.value.map((row) => {
         return {
           id: row._id,
           reportname: row.reportName || ' --- ',
           month: row.reportMonth.toString() || ' --- ',
-          owner: row.owner || ' --- ',
+          owner: row.reportDepartment.toString() || ' --- ',
           createdat: formatDate(row.createdAt) || ' --- ',
           lastmodified: formatDate(row.updatedAt) || ' --- ',
         }
@@ -341,9 +342,14 @@ const fetchAllReports = () => {
     })
 }
 
+const fetchAllGroups = async () => {
+  groups.value = await getAllGroups()
+}
+
 onMounted(async () => {
   await initializeCookieValues()
   fetchAllReports()
+  await fetchAllGroups()
 })
 </script>
 <style lang="scss">

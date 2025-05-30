@@ -177,7 +177,7 @@
 
     <!-- Dialog to display users in a group -->
     <q-dialog v-model="showUsersInGroupDialog"  persistent>
-      <q-card style="width: 100%; max-width: 350px;">
+      <q-card style="width: 100%;">
         <q-card-section>
           <div class="text-h6">{{ selectedGroupName }}</div>
           <div class="text-subtitle2">{{ selectedGroupDescription }}</div>
@@ -213,7 +213,7 @@
         </q-card-actions>
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Close" v-close-popup @click="resetGroupDialog" />
+          <q-btn flat label="Close" color="negative" v-close-popup @click="resetGroupDialog" />
         </q-card-actions>
       </q-card>
     </q-dialog>

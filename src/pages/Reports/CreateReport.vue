@@ -1,16 +1,9 @@
 <template>
   <q-toolbar class="bg-black text-white">
     <q-toolbar-title>
-      {{ reportname || "-------" }}
+      {{ reportname || '-------' }}
     </q-toolbar-title>
-    <q-btn
-      flat
-      round
-      dense
-      icon="table_chart"
-      class="q-mr-xs"
-      @click="showDialog = true"
-    >
+    <q-btn flat round dense icon="table_chart" class="q-mr-xs" @click="showDialog = true">
       <q-tooltip> Add New Column </q-tooltip>
     </q-btn>
     <q-btn
@@ -42,14 +35,14 @@
 
   <div class="q-pa-md">
     <div class="row q-col-gutter-md q-pb-md q-px-sm">
-      <div class="col-4">
+      <div class="col-3">
         <q-input dense clearable v-model="reportname" label="Report Name">
           <template v-slot:prepend>
             <q-icon name="article" @click.stop.prevent />
           </template>
         </q-input>
       </div>
-      <div class="col-4">
+      <div class="col-3">
         <q-select
           dense
           clearable
@@ -74,8 +67,35 @@
           </template>
         </q-select>
       </div>
+
+      <div class="col-3">
+        <q-select
+          dense
+          clearable
+          v-model="reportdepartment"
+          use-input
+          multiple
+          input-debounce="0"
+          emit-value
+          label="Select Report Owner Department"
+          :options="departmenthOptions"
+          option-label="label"
+          option-value="value"
+          @filter="filterDeptFn"
+        >
+          <template v-slot:no-option>
+            <q-item>
+              <q-item-section class="text-grey"> No results </q-item-section>
+            </q-item>
+          </template>
+          <template v-slot:prepend>
+            <q-icon name="account_tree" @click.stop.prevent />
+          </template>
+        </q-select>
+      </div>
+
       <!-- Upload Excel File -->
-      <div class="col-4">
+      <div class="col-3">
         <q-file
           dense
           v-model="existingfile"
@@ -124,12 +144,7 @@
                 v-slot="scope"
                 @save="(val) => updateColumnLabel(col, val)"
               >
-                <q-input
-                  v-model="scope.value"
-                  dense
-                  autofocus
-                  @keyup.enter="scope.set"
-                />
+                <q-input v-model="scope.value" dense autofocus @keyup.enter="scope.set" />
               </q-popup-edit>
 
               <!-- Delete Column Button -->
@@ -153,10 +168,7 @@
       <!--/ Enables Edit Table Headers -->
 
       <!-- Slot para coluna custom -->
-      <template
-        v-if="customColumn.name"
-        v-slot:[`body-cell-${customColumn.name}`]="props"
-      >
+      <template v-if="customColumn.name" v-slot:[`body-cell-${customColumn.name}`]="props">
         <q-td :props="props">
           <q-badge color="teal" :label="props.row[customColumn.name]" />
         </q-td>
@@ -169,7 +181,7 @@
       >
         <q-td :props="props">
           <!-- Render personalizado por coluna -->
-          {{ renderCell(col.name, props.row[col.field], props.row) || "---" }}
+          {{ renderCell(col.name, props.row[col.field], props.row) || '---' }}
           <q-popup-edit v-model="props.row[col.field]" auto-save v-slot="scope">
             <q-input
               type="textarea"
@@ -207,13 +219,7 @@
       </q-card-section>
 
       <q-card-section>
-        <q-input
-          v-model="customColumn.label"
-          label="Column Title"
-          outlined
-          dense
-          autofocus
-        />
+        <q-input v-model="customColumn.label" label="Column Title" outlined dense autofocus />
         <q-input
           v-model="customColumn.defaultValue"
           label="Default Value"
@@ -237,49 +243,48 @@
 </template>
 
 <script setup>
-import { useQuasar } from "quasar";
-import * as XLSX from "xlsx";
-import { ref, computed } from "vue";
-import { createReport } from "src/boot/reports";
+import { useQuasar } from 'quasar'
+import * as XLSX from 'xlsx'
+import { ref, computed } from 'vue'
+import { createReport } from 'src/boot/reports'
 
-const $q = useQuasar();
-let idCounter = 1;
-let reportname = ref("");
-let reportmonth = ref([]);
-let existingfile = ref(null);
+const $q = useQuasar()
+let idCounter = 1
+let reportname = ref('')
+let reportmonth = ref([])
+let reportdepartment = ref(null)
+let existingfile = ref(null)
 
-const excelData = ref([]);
-const importedFileRows = ref([]);
-const importedFileColumns = ref([]);
+const excelData = ref([])
+const importedFileRows = ref([])
+const importedFileColumns = ref([])
 
-const showDialog = ref(false);
+const showDialog = ref(false)
 
 const customColumn = ref({
-  label: "",
-  defaultValue: "",
-  name: "",
-});
+  label: '',
+  defaultValue: '',
+  name: '',
+})
 
 // Add Costum Column
 const addCustomColumn = () => {
-  const label = customColumn.value.label?.trim();
-  const defaultVal = customColumn.value.defaultValue;
-  if (!label) return;
+  const label = customColumn.value.label?.trim()
+  const defaultVal = customColumn.value.defaultValue
+  if (!label) return
 
-  const colName = label.toLowerCase().replace(/\s+/g, "_");
-  customColumn.value.name = colName;
+  const colName = label.toLowerCase().replace(/\s+/g, '_')
+  customColumn.value.name = colName
 
-  const alreadyExists = importedFileColumns.value.some(
-    (col) => col.name === colName
-  );
+  const alreadyExists = importedFileColumns.value.some((col) => col.name === colName)
 
   if (alreadyExists) {
     $q.notify({
-      type: "warning",
+      type: 'warning',
       message: `A coluna "${label}" já existe.`,
-      icon: "warning",
-    });
-    return;
+      icon: 'warning',
+    })
+    return
   }
 
   // Adiciona nova coluna
@@ -287,174 +292,206 @@ const addCustomColumn = () => {
     name: colName,
     label: label,
     field: colName,
-    align: "left",
-  });
+    align: 'left',
+  })
 
   importedFileRows.value.forEach((row) => {
-    row[colName] = defaultVal;
-  });
+    row[colName] = defaultVal
+  })
 
-  showDialog.value = false;
-  customColumn.value = { label: "", defaultValue: "", name: "" };
-};
+  showDialog.value = false
+  customColumn.value = { label: '', defaultValue: '', name: '' }
+}
 
 const deleteColumn = (columnName) => {
-  importedFileColumns.value = importedFileColumns.value.filter(
-    (col) => col.name !== columnName
-  );
+  importedFileColumns.value = importedFileColumns.value.filter((col) => col.name !== columnName)
 
   importedFileRows.value = importedFileRows.value.map((row) => {
-    const newRow = { ...row };
-    delete newRow[columnName];
-    return newRow;
-  });
-};
+    const newRow = { ...row }
+    delete newRow[columnName]
+    return newRow
+  })
+}
 
-const stringOptions = [
-  {
-    label: "January",
-    value: "January",
-  },
-  {
-    label: "February",
-    value: "February",
-  },
-  {
-    label: "March",
-    value: "March",
-  },
-  {
-    label: "April",
-    value: "April",
-  },
-  {
-    label: "May",
-    value: "May",
-  },
-  {
-    label: "June",
-    value: "June",
-  },
-  {
-    label: "July",
-    value: "July",
-  },
-  {
-    label: "August",
-    value: "August",
-  },
-  {
-    label: "September",
-    value: "September",
-  },
-  {
-    label: "October",
-    value: "October",
-  },
-  {
-    label: "November",
-    value: "November",
-  },
-  {
-    label: "December",
-    value: "December",
-  },
-];
+const deptSelectOptions = [
+      { label: 'Compliance', value: 'Compliance' },
+      { label: 'Sales', value: 'Sales' },
+      { label: 'Marketing', value: 'Marketing' },
+      { label: 'Finance', value: 'Finance' },
+      { label: 'Operations', value: 'Operations' },
+      { label: 'Support', value: 'Support' },
+      { label: 'Technology', value: 'Technology' },
+      { label: 'Customer Service', value: 'Customer Service' },
+      { label: 'Human Resources', value: 'Human Resources' },
+      { label: 'IT', value: 'IT' },
+      { label: 'Core & Digital', value: 'Core & Digital' },
+      { label: 'Risk', value: 'Risk' },
+      { label: 'Business & Payments', value: 'Business & Payments' },
+      { label: 'Financial Services', value: 'Financial Services' },
+    ]
 
-const monthOptions = ref(stringOptions);
+const monthSelectOptions = [
+  {
+    label: 'January',
+    value: 'January',
+  },
+  {
+    label: 'February',
+    value: 'February',
+  },
+  {
+    label: 'March',
+    value: 'March',
+  },
+  {
+    label: 'April',
+    value: 'April',
+  },
+  {
+    label: 'May',
+    value: 'May',
+  },
+  {
+    label: 'June',
+    value: 'June',
+  },
+  {
+    label: 'July',
+    value: 'July',
+  },
+  {
+    label: 'August',
+    value: 'August',
+  },
+  {
+    label: 'September',
+    value: 'September',
+  },
+  {
+    label: 'October',
+    value: 'October',
+  },
+  {
+    label: 'November',
+    value: 'November',
+  },
+  {
+    label: 'December',
+    value: 'December',
+  },
+]
 
+const monthOptions = ref(monthSelectOptions)
 const filterFn = (val, update) => {
-  if (val === "") {
+  if (val === '') {
     update(() => {
-      monthOptions.value = stringOptions;
-    });
-    return;
+      monthOptions.value = monthSelectOptions
+    })
+    return
   }
 
   update(() => {
-    const needle = val.toLowerCase();
-    // monthOptions.value = stringOptions.filter(v => v.toLowerCase().indexOf(needle) > -1)
-    monthOptions.value = stringOptions.filter((v) =>
-      String(v.label || "")
+    const needle = val.toLowerCase()
+    monthOptions.value = monthSelectOptions.filter((v) =>
+      String(v.label || '')
         .toLowerCase()
         .includes(needle)
-    );
-  });
-};
+    )
+  })
+}
+
+const departmenthOptions = ref(deptSelectOptions)
+const filterDeptFn = (val, update) => {
+  if (val === '') {
+    update(() => {
+      departmenthOptions.value = deptSelectOptions
+    })
+    return
+  }
+
+  update(() => {
+    const needle = val.toLowerCase()
+    departmenthOptions.value = deptSelectOptions.filter((v) =>
+      String(v.label || '')
+        .toLowerCase()
+        .includes(needle)
+    )
+  })
+}
 
 // Upload Excel File and convert to JSON and build Table
 const handleFileUpload = (file) => {
-  if (!file) return;
+  if (!file) return
 
-  const reader = new FileReader();
+  const reader = new FileReader()
   reader.onload = (e) => {
-    const data = new Uint8Array(e.target.result);
-    const workbook = XLSX.read(data, { type: "array" });
+    const data = new Uint8Array(e.target.result)
+    const workbook = XLSX.read(data, { type: 'array' })
 
     // Read first Sheet
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-    excelData.value = json;
+    const sheetName = workbook.SheetNames[0]
+    const worksheet = workbook.Sheets[sheetName]
+    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
+    excelData.value = json
 
     // Check for empty columns and handle them
     const checkEmptyColumns = (columns, rows) => {
-      const emptyColumns = [];
+      const emptyColumns = []
 
       // Iterate over each column to check if all cells are empty
       columns.forEach((col, index) => {
-        const isEmpty = rows.every((row) => !row[index] || row[index] === "");
+        const isEmpty = rows.every((row) => !row[index] || row[index] === '')
         if (isEmpty) {
-          emptyColumns.push(col.name);
+          emptyColumns.push(col.name)
         }
-      });
+      })
 
       // If any empty columns exist, notify or handle
       if (emptyColumns.length > 0) {
         $q.notify({
-          type: "warning",
-          message: `This columns are empty (${emptyColumns.join(", ")})`,
-          icon: "warning",
-        });
+          type: 'warning',
+          message: `This columns are empty (${emptyColumns.join(', ')})`,
+          icon: 'warning',
+        })
       }
-    };
+    }
 
     // Building Table Headers
     importedFileColumns.value = json[0].map((col, index) => ({
       id: idCounter++,
-      name: String(col).toLowerCase(),  // OLD Approach col?.toLowerCase(),
+      name: String(col).toLowerCase(), // OLD Approach col?.toLowerCase(),
       label: capitalize(col),
       field: String(col).toLowerCase(),
-      align: "left" || '',
-    }));
+      align: 'left' || '',
+    }))
 
     // Add a static column at the end
     importedFileColumns.value.push({
-      name: "actions",
-      label: "Actions",
-      field: "actions",
-      align: "right",
-    });
+      name: 'actions',
+      label: 'Actions',
+      field: 'actions',
+      align: 'right',
+    })
 
     // Check for empty columns and notify
-    checkEmptyColumns(importedFileColumns.value, json.slice(1));
+    checkEmptyColumns(importedFileColumns.value, json.slice(1))
 
     // Building Table Rows
     importedFileRows.value = excelData.value.slice(1).map((row, index) => {
-      const rowData = {};
+      const rowData = {}
       importedFileColumns.value.forEach((col, colIndex) => {
         // If the value is empty, fill it with an empty string with dashes(" --- ")
-        rowData[col.field] = row[colIndex] || " --- "; // Replace empty cells with an empty string
-      });
-      return { id: index + 1, ...rowData };
-    });
-  };
-  reader.readAsArrayBuffer(file);
-};
+        rowData[col.field] = row[colIndex] || ' --- ' // Replace empty cells with an empty string
+      })
+      return { id: index + 1, ...rowData }
+    })
+  }
+  reader.readAsArrayBuffer(file)
+}
 
 const dynamicColumns = computed(() =>
-  importedFileColumns.value.filter((col) => col.name !== "actions")
-);
+  importedFileColumns.value.filter((col) => col.name !== 'actions')
+)
 
 //On this method, I can trick the table to render the cell as I want
 // @params columnName: string - The name of the column
@@ -462,22 +499,20 @@ const dynamicColumns = computed(() =>
 // @params row: object - The row object
 const renderCell = (columnName, value, row) => {
   // Default
-  return value;
-};
+  return value
+}
 
 const updateColumnLabel = (col, newLabel) => {
-  col.label = newLabel;
+  col.label = newLabel
 
-  const index = importedFileColumns.value.findIndex(
-    (c) => c?.name === col?.name
-  );
+  const index = importedFileColumns.value.findIndex((c) => c?.name === col?.name)
   if (index !== -1) {
     importedFileColumns.value[index] = {
       ...importedFileColumns.value[index],
       label: newLabel,
-    };
+    }
   }
-};
+}
 
 const addNewRow = () => {
   // Building Table Headers
@@ -486,47 +521,45 @@ const addNewRow = () => {
     name: `col${importedFileColumns.value.length}`,
     label: `col${importedFileColumns.value.length}`,
     field: `col${importedFileColumns.value.length}`,
-    align: "left",
-  });
-};
+    align: 'left',
+  })
+}
 
 const deleteRow = (row) => {
-  importedFileRows.value = importedFileRows.value.filter(
-    (r) => r.id !== row.id
-  );
-};
+  importedFileRows.value = importedFileRows.value.filter((r) => r.id !== row.id)
+}
 
 const saveReport = async () => {
-  const response = ref(null);
+  const response = ref(null)
   try {
     response.value = await createReport({
       reportname: reportname.value,
       reportmonth: reportmonth.value,
+      reportdepartment: reportdepartment.value,
       importedFileColumns: importedFileColumns.value,
       importedFileRows: importedFileRows.value,
-    });
+    })
 
     $q.notify({
-      color: "positive",
-      message: "Report created successfully",
-      icon: "check_circle",
-    });
+      color: 'positive',
+      message: 'Report created successfully',
+      icon: 'check_circle',
+    })
 
     // Redirecionar após sucesso
-    window.location.href = "#/reports";
+    window.location.href = '#/reports'
   } catch (error) {
-    console.error("Error creating report:", response.value);
+    console.error('Error creating report:', response.value)
     $q.notify({
-      color: "negative",
-      message: response.value || "Failed to create Report. Please try again.",
-      icon: "error",
-    });
+      color: 'negative',
+      message: response.value || 'Failed to create Report. Please try again.',
+      icon: 'error',
+    })
   }
-};
+}
 
 //Utility function to capitalize the first letter of a string
-const capitalize = (str) =>
-  str && str[0].toUpperCase() + str.slice(1).toLowerCase();
+const capitalize = (str) => str && str[0].toUpperCase() + str.slice(1).toLowerCase()
 </script>
 
 <style lang="sass">

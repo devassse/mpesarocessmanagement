@@ -66,7 +66,11 @@ const linksList = [
     title:'Reports',
     icon: 'analytics',
     link: '/reports',
-    adminOnly: false
+  },
+  {
+    title:'Ticket Flow',
+    icon: 'sell',
+    link: '/ticket-flow',
   },
   {
     title: 'Claw Back',

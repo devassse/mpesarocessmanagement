@@ -21,6 +21,7 @@ const routes = [
       {path: "/reports/createreport", component: () => import('pages/Reports/CreateReport.vue'),},
       {path: "/reports/maintenance/:id", name:"ReportMaintenanceView", component: () => import('pages/Reports/ReportMaintenance.vue'),},
       {path: "/reports/visualize/:id", name:"ReportDetailsView", component: () => import('pages/Reports/ViewReport.vue'),},
+      {path: "/ticket-flow", component: () => import('pages/TicketFlow/MainPage.vue'),},
     ]
   },
   {
