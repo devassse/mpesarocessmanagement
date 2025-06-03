@@ -431,7 +431,7 @@ const updateReportsGroups = (report) => {
   selectedReportGroups.value = []
 }
 
-const checkReportRow = (row, checked) => {
+const checkReportRow = async (row, checked) => {
   // expandedRow.value = expandedRow.value === row.id ? null : row.id
   if (checked) {
     expandedRow.value = row.id // abre a nova linha
@@ -453,6 +453,9 @@ const checkReportRow = (row, checked) => {
   }
 
   selectedReportGroups.value = []
+
+  // Fetch all groups to ensure the UI is updated
+  fetchAllReports()
 }
 
 onMounted(async () => {
