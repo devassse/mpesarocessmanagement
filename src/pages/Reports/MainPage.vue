@@ -30,7 +30,6 @@
     :rows-per-page-options="[15]"
   >
     <template v-slot:top>
-      <!-- <h4 class="q-ma-none q-pa-none">Reports</h4> -->
       <q-btn
         color="secondary"
         label="Create new Report"
@@ -60,10 +59,10 @@
           <q-toggle
             :disable="!isAdmin"
             color="secondary"
-            v-model="props.expand"
             checked-icon="add"
             unchecked-icon="remove"
-            @update:model-value="checkReportRow(props.row.id)"
+            :model-value="expandedRow === props.row.id"
+            @update:model-value="(checked) => checkReportRow(props.row, checked)"
           />
         </q-td>
 
@@ -96,7 +95,6 @@
               }"
               v-if="isAdmin"
             >
-              <!-- <q-badge rounded color="red" floating>4</q-badge> -->
             </q-btn>
             <q-btn
               flat
@@ -110,7 +108,7 @@
           </div>
         </q-td>
       </q-tr>
-      <q-tr v-show="expandedRow === props.row.id || isAdmin" :props="props">
+      <q-tr v-show="expandedRow === props.row.id && isAdmin" :props="props">
         <q-td colspan="100%">
           <div class="text-left q-pl-md">
             <h6 class="q-my-none" style="font-size: 0.95rem">
@@ -135,6 +133,11 @@
                   :label="group.name"
                   color="secondary"
                 />
+
+                <!-- <div v-for="group in allGroups" :key="group.id">
+                  <q-checkbox v-model="columns.selectedGroups" :val="group.id" :label="group.name" />
+                </div> -->
+
                 <q-btn
                   label="Update"
                   color="secondary"
@@ -346,6 +349,7 @@ const fetchAllReports = () => {
   getAllReports()
     .then((response) => {
       communsRows.value = response.reports
+
       rows.value = communsRows.value.map((row) => {
         return {
           id: row._id,
@@ -360,6 +364,10 @@ const fetchAllReports = () => {
     .catch((error) => {
       console.error(error)
     })
+}
+
+const fetchAllGroups = async () => {
+  allGroups.value = await getAllGroups()
 }
 
 const updateReportsGroups = (report) => {
@@ -423,18 +431,28 @@ const updateReportsGroups = (report) => {
   selectedReportGroups.value = []
 }
 
-const checkReportRow = (id) => {
-  expandedRow.value = expandedRow.value === id ? null : id
-  for (const group of allGroups.value) {
-    group.isSelected = false //TODO: This should be set based on the report's current groups
+const checkReportRow = (row, checked) => {
+  // expandedRow.value = expandedRow.value === row.id ? null : row.id
+  if (checked) {
+    expandedRow.value = row.id // abre a nova linha
+  } else {
+    expandedRow.value = null // se clicar na mesma, fecha
   }
-  // console.log('Checking Report Row:', selectedReportGroups.value)
+
+  const singleReport = communsRows.value.find((item) => item._id === row.id)
+  if (singleReport) {
+    // Check if the report has groups and set the isSelected property accordingly
+    allGroups.value.forEach((group) => {
+      group.isSelected = singleReport.groups.includes(group._id)
+    })
+  } else {
+    // If no report found, reset all groups to not selected
+    allGroups.value.forEach((group) => {
+      group.isSelected = false
+    })
+  }
 
   selectedReportGroups.value = []
-}
-
-const fetchAllGroups = async () => {
-  allGroups.value = await getAllGroups()
 }
 
 onMounted(async () => {
