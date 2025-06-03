@@ -463,6 +463,7 @@ const handleFileUpload = (file) => {
       label: capitalize(col),
       field: String(col).toLowerCase(),
       align: 'left' || '',
+      user_ids: []
     }))
 
     // Add a static column at the end

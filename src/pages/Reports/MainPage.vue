@@ -37,6 +37,7 @@
         no-caps
         icon="add_chart"
         to="/reports/createreport"
+        :disable="!isAdmin"
       />
       <q-space />
       <q-input
@@ -57,10 +58,12 @@
       <q-tr :props="props">
         <q-td auto-width>
           <q-toggle
+            :disable="!isAdmin"
             color="secondary"
             v-model="props.expand"
             checked-icon="add"
             unchecked-icon="remove"
+            @update:model-value="checkReportRow(props.row.id)"
           />
         </q-td>
 
@@ -74,7 +77,10 @@
               icon="visibility"
               color="secondary"
               class="q-mr-xs"
-              :to="{ name: 'ReportDetailsView', params: { id: props.row.id } }"
+              :to="{
+                name: 'ReportMaintenanceView',
+                params: { id: props.row.id },
+              }"
               v-if="!isAdmin"
             />
             <q-btn
@@ -104,7 +110,7 @@
           </div>
         </q-td>
       </q-tr>
-      <q-tr v-show="props.expand" :props="props">
+      <q-tr v-show="expandedRow === props.row.id || isAdmin" :props="props">
         <q-td colspan="100%">
           <div class="text-left q-pl-md">
             <h6 class="q-my-none" style="font-size: 0.95rem">
@@ -113,7 +119,7 @@
             <!-- This is expand slot for row above: {{ props.row.reportname }}. -->
             <div class="row" style="border-top: 1px solid #ccc">
               <div
-                class="col-3"
+                class="col-4"
                 style="
                   display: flex;
                   flex-direction: column;
@@ -121,11 +127,22 @@
                   padding-top: 5px;
                 "
               >
-                <span>Groups</span>
-                <q-checkbox v-for="group in groups" v-model="selectedRoles" :key="group.name" :label="group.name" color="secondary"/>
+                <span>All Groups</span>
+                <q-checkbox
+                  v-for="group in allGroups"
+                  v-model="group.isSelected"
+                  :key="group.name"
+                  :label="group.name"
+                  color="secondary"
+                />
+                <q-btn
+                  label="Update"
+                  color="secondary"
+                  @click="updateReportsGroups(props.row)"
+                ></q-btn>
               </div>
               <div
-                class="col-6"
+                class="col-8"
                 style="
                   display: flex;
                   justify-content: space-between;
@@ -134,13 +151,18 @@
                   padding-left: 10px;
                 "
               >
-                <span>Permissions</span>
-                <q-checkbox v-model="value" label="Owner" color="secondary" />
+                <!-- <span>Permissions</span>
+                <div v-for="role in groups" :key="role" :label="role" color="secondary">
+                  <q-checkbox v-for="permission in role.userPermissions" v-model="selectedRoles" :key="permission" :label="permission" color="secondary">
+                  {{ permission }}
+                </q-checkbox>
+                </div> -->
+                <!-- <q-checkbox v-model="value" label="Owner" color="secondary" />
                 <q-checkbox v-model="value2" label="ReadOnly" color="secondary" />
                 <q-checkbox v-model="value3" label="ParcialWritter" color="secondary" />
                 <q-checkbox v-model="value" label="Owner" color="secondary" />
                 <q-checkbox v-model="value2" label="ReadOnly" color="secondary" />
-                <q-checkbox v-model="value3" label="ParcialWritter" color="secondary" />
+                <q-checkbox v-model="value3" label="ParcialWritter" color="secondary" /> -->
               </div>
             </div>
           </div>
@@ -176,6 +198,7 @@
 import { onMounted, ref } from 'vue'
 import images from 'src/boot/images'
 import { getAllReports, deleteReport } from 'src/boot/reports'
+import { updateReportGroups } from 'src/boot/reports'
 import { getAllGroups } from 'boot/roles'
 import Cookies from 'js-cookie'
 import { useQuasar } from 'quasar'
@@ -184,11 +207,7 @@ const $q = useQuasar()
 const loading = ref(false)
 const filter = ref('')
 
-let value = ref(false)
-let value2 = ref(false)
-let value3 = ref(false)
-let value4 = ref(false)
-let value5 = ref(false)
+const expandedRow = ref(null)
 
 const isElectron = ref(false)
 const isAdmin = ref(false)
@@ -198,8 +217,9 @@ const reportName = ref('')
 const reportId = ref('')
 const isDeleteReport = ref(false)
 
-const groups = ref([])
-const selectedRoles = ref([])
+const allGroups = ref([])
+const selectedReportGroups = ref({})
+const selectedRoles = ref(false)
 
 const communsRows = ref([])
 const columns = [
@@ -342,8 +362,79 @@ const fetchAllReports = () => {
     })
 }
 
+const updateReportsGroups = (report) => {
+  selectedReportGroups.value = []
+
+  // groups.value.forEach((group) => {
+  //   if (group.isSelected) {
+  //     if (selectedReportGroups.value[report.id]) {
+  //       selectedReportGroups.value[report.id].push(group._id)
+  //     } else {
+  //       selectedReportGroups.value[report.id] = [group._id]
+  //     }
+  //   } else {
+  //     if (selectedReportGroups.value[report.id]) {
+  //       selectedReportGroups.value[report.id] = selectedReportGroups.value[report.id].filter(
+  //         (name) => name !== group._id
+  //       )
+  //     }
+  //   }
+  // })
+
+  allGroups.value.forEach((group) => {
+    const idx = selectedReportGroups.value.indexOf(group._id)
+
+    if (group.isSelected) {
+      if (idx === -1) {
+        selectedReportGroups.value.push(group._id)
+      }
+    } else {
+      if (idx !== -1) {
+        selectedReportGroups.value.splice(idx, 1)
+      }
+    }
+  })
+
+  const groups = {
+    groups: (selectedReportGroups.value = selectedReportGroups.value.filter(
+      (group) => group !== undefined && group !== null
+    )),
+  }
+
+  updateReportGroups(report.id, groups)
+    .then((response) => {
+      console.log('Update Report Groups Response:', response)
+
+      $q.notify({
+        color: 'positive',
+        message: 'Report updated successfully',
+        icon: 'check_circle',
+      })
+    })
+    .catch((error) => {
+      $q.notify({
+        color: 'negative',
+        message: 'Failed to update Report. Please try again.',
+        icon: 'error',
+      })
+      console.error(error)
+    })
+
+  selectedReportGroups.value = []
+}
+
+const checkReportRow = (id) => {
+  expandedRow.value = expandedRow.value === id ? null : id
+  for (const group of allGroups.value) {
+    group.isSelected = false //TODO: This should be set based on the report's current groups
+  }
+  // console.log('Checking Report Row:', selectedReportGroups.value)
+
+  selectedReportGroups.value = []
+}
+
 const fetchAllGroups = async () => {
-  groups.value = await getAllGroups()
+  allGroups.value = await getAllGroups()
 }
 
 onMounted(async () => {
@@ -377,6 +468,4 @@ onMounted(async () => {
   font-style: italic;
   color: $negative;
 }
-
-
 </style>

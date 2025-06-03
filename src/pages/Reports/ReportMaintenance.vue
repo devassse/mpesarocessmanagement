@@ -2,8 +2,8 @@
   <q-toolbar class="bg-black text-white">
     <q-toolbar-title>
       <span>
-        {{ reportName || 'Report Name' }}
-        <q-popup-edit v-model="reportName" auto-save v-slot="scope">
+        {{ reportNameChild || 'Report Name' }}
+        <q-popup-edit v-model="reportNameChild" auto-save v-slot="scope" v-if="isAdmin">
           <q-input
             type="textarea"
             rows="3"
@@ -15,8 +15,8 @@
         </q-popup-edit>
       </span>
       <em
-        >({{ reportMonth.toString() || ' --- ' }})
-        <q-popup-edit v-model="reportMonth" auto-save v-slot="scope">
+      >({{ reportMonthChild.toString() || ' --- ' }})
+        <q-popup-edit v-model="reportMonthChild" auto-save v-slot="scope" v-if="isAdmin">
           <!-- <q-input type="textarea" rows="3" v-model="scope.value" dense autofocus @keyup.enter="scope.set" /> -->
           <q-select
             option-label="label"
@@ -34,14 +34,30 @@
     <q-btn flat round dense icon="file_download" @click="exportToExcelOnChild">
       <q-tooltip> Export File </q-tooltip>
     </q-btn>
-    <!-- <q-btn flat round dense icon="person">
+    <q-btn v-if="isAdmin" flat round dense icon="person">
       <q-badge floating color="red">2</q-badge>
       <q-tooltip> 2 new modifications </q-tooltip>
-    </q-btn> -->
-    <q-btn flat round dense icon="table_rows" class="q-mr-xs" @click="addNewRowOnChild">
+    </q-btn>
+    <q-btn
+      flat
+      round
+      dense
+      icon="table_rows"
+      class="q-mr-xs"
+      @click="addNewRowOnChild"
+      :disable="!isAdmin"
+    >
       <q-tooltip> Add New Row </q-tooltip>
     </q-btn>
-    <q-btn flat round dense icon="save" class="q-mr-xs" @click="saveUpdateReportOnChild">
+    <q-btn
+      flat
+      round
+      dense
+      icon="save"
+      class="q-mr-xs"
+      @click="saveUpdateReportOnChild"
+      :disable="!isAdmin"
+    >
       <q-tooltip> Update Report </q-tooltip>
     </q-btn>
     <q-btn flat round dense to="/reports" icon="arrow_back">
@@ -60,6 +76,7 @@
         indicator-color="primary"
         align="justify"
         narrow-indicator
+        no-caps
       >
         <q-tab name="tables" label="Table" />
         <q-tab name="summary" label="Summary" />
@@ -68,12 +85,12 @@
       <q-separator />
       <q-tab-panels v-model="tab" animated>
         <q-tab-panel name="tables">
-          <report-table ref="reportTableRef"/>
+          <report-table v-if="isAdmin" @report-name-to-parent="reportNameFromChild" ref="reportTableRef" />
+          <report-view v-else @report-name-to-parent="reportNameFromChild" />
         </q-tab-panel>
 
         <q-tab-panel name="summary">
-          <div class="text-h6">Summary</div>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit.
+          <report-summary />
         </q-tab-panel>
 
         <q-tab-panel name="graphs">
@@ -85,25 +102,52 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import ReportGraphs from 'src/components/Report/ReportGraphs.vue'
+import { ref, onMounted, defineEmits } from 'vue'
 import ReportTable from 'src/components/Report/ReportTable.vue'
+import ReportView from 'src/components/Report/ReportView.vue'
+import ReportSummary from 'src/components/Report/ReportSummary.vue'
+import ReportGraphs from 'src/components/Report/ReportGraphs.vue'
+import Cookies from 'js-cookie'
 
-const reportName = ref('')
-const reportMonth = ref('')
+const isElectron = ref(false)
+const isAdmin = ref(false)
 const tab = ref('tables')
 const reportTableRef = ref(null)
 
-const addNewRowOnChild = () => {s
+const reportNameChild = ref('');  
+const reportMonthChild = ref('')
+
+const reportNameFromChild = (payload) => {
+  reportNameChild.value = payload.name;
+  reportMonthChild.value = payload.month;
+}
+
+const addNewRowOnChild = () => {
   reportTableRef.value?.addNewRow()
 }
 
 const saveUpdateReportOnChild = () => {
-  reportTableRef.value?.saveUpdateReport()
+  const payload = {
+    name: reportNameChild.value,
+    month: reportMonthChild.value,
+  }
+  reportTableRef.value?.saveUpdateReport(payload)
 }
 
 const exportToExcelOnChild = () => {
   reportTableRef.value?.exportToExcel()
+}
+
+const getCookie = async (name) => {
+  if (isElectron.value) {
+    return await window.electronAPI.getCookie(name)
+  } else {
+    return Cookies.get(name)
+  }
+}
+
+const initializeCookieValues = async () => {
+  isAdmin.value = (await getCookie('isAdmin')) === 'true'
 }
 
 const monthOptions = [
@@ -156,4 +200,8 @@ const monthOptions = [
     value: 'December',
   },
 ]
+
+onMounted(async () => {
+  initializeCookieValues()
+})
 </script>

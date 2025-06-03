@@ -70,9 +70,8 @@ const reportMonth = ref('')
 
 const columns = ref([])
 const rows = ref([])
-const tab = ref('tables')
 
-const optionsStatus = ['Done', 'In Progress', 'To Do', 'Closed']
+const emit = defineEmits(['reportNameToParent'])
 
 const addNewRow = () => {
   const newRow = {}
@@ -87,20 +86,22 @@ const removerLinha = (row, index) => {
   rows.value.splice(index, 1)
 }
 
-const saveUpdateReport = () => {
+const saveUpdateReport = ({name, month}) => {
   const id = route.params.id
   const report = {
-    reportName: reportName.value,
-    reportMonth: reportMonth.value,
+    reportName: name, // Name passed from parent component
+    reportMonth: month, // Month passed from parent component
     fileColumns: columns.value,
     fileRows: rows.value,
   }
 
   updateReport(id, report)
     .then((response) => {
+      console.log('report updated', response);
+      
       $q.notify({
         color: 'positive',
-        message: 'Report updated successfully',
+        message: `${response?.message}` || 'Report updated successfully!',
         icon: 'check_circle',
       })
     })
@@ -210,6 +211,19 @@ onMounted(async () => {
         align: 'left',
         ...col,
       }))
+      // columns.value = (response.report.fileColumns || [])
+      //   .filter((col) => !col?.permission || userPermissions.includes(col?.permission))
+      //   .map((col) => ({
+      //     align: 'left',
+      //     ...col,
+      //   }))
+
+      // Emit the report name to the parent component
+      const payload = {
+        name: reportName.value,
+        month: reportMonth.value,
+      }
+      emit('reportNameToParent', payload)
     })
     .catch((error) => {
       console.error(error)

@@ -83,6 +83,21 @@ const updateReport = async (id, data) => {
   }
 }
 
+// Update a report's groups
+const updateReportGroups = async (id, data) => {
+
+  console.log('Updating report groups on Boot file:', data);
+  
+
+  try {
+    const response = await apiClient.put(`reports/update-report-groups/${id}`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating report groups:', error.response ? error.response.data : error.message);
+    throw error;
+  }
+}
+
 // Delete a report
 const deleteReport = async (id) => {
   try {
@@ -178,6 +193,7 @@ export default boot(({ app }) => {
     createReport,
     getAllReports,
     updateReport,
+    updateReportGroups,
     deleteReport,
     getSingleReportById,
     downloadReport,
@@ -194,6 +210,7 @@ export {
   createReport,
   getAllReports,
   updateReport,
+  updateReportGroups,
   deleteReport,
   getSingleReportById,
   downloadReport,
