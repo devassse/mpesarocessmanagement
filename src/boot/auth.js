@@ -98,8 +98,6 @@ const getCurrentUser = async (authToken) => {
 
     //Save User information on session storage
     sessionStorage.setItem('currentUser', JSON.stringify(response.data));
-
-    console.log('Current user fetched successfully:', response.data);
     
     return response.data;
   } catch (error) {

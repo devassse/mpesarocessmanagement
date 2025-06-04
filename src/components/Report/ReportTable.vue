@@ -25,9 +25,9 @@
                 @keyup.enter="scope.set"
                 flat
                 minimal
+                :disable="props.col.disable && !isAdmin"
               />
             </template>
-
             <template v-else>
               <q-input
                 :type="getFieldType(props.col.name) === 'number' ? 'number' : 'textarea'"
@@ -50,6 +50,7 @@
             round
             dense
             @click="removerLinha(props.row, props.rowIndex)"
+            :disable="!isAdmin"
           />
         </template>
       </q-td>
@@ -63,6 +64,7 @@ import { getSingleReportById, updateReport } from 'src/boot/reports'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import * as XLSX from 'xlsx'
+import Cookies from 'js-cookie'
 
 const $q = useQuasar()
 const route = useRoute()
@@ -71,6 +73,29 @@ const reportMonth = ref('')
 
 const columns = ref([])
 const rows = ref([])
+
+const isElectron = ref(false)
+const isAdmin = ref(false)
+const isEditor = ref(false)
+const isViewer = ref(false)
+const isAuditor = ref(false)
+
+
+const getCookie = async (name) => {
+  if (isElectron.value) {
+    return await window.electronAPI.getCookie(name)
+  } else {
+    return Cookies.get(name)
+  }
+}
+
+const initializeCookieValues = async () => {
+  isAdmin.value = (await getCookie('isAdmin')) === 'true'
+  isAuditor.value = (await getCookie('isAuditor')) === 'true'
+  isEditor.value = (await getCookie('isEditor')) === 'true'
+  isViewer.value = (await getCookie('isViewer')) === 'true'
+}
+
 
 const emit = defineEmits(['reportNameToParent'])
 
@@ -197,6 +222,16 @@ const exportToExcel = () => {
   XLSX.writeFile(workbook, 'report.xlsx')
 }
 
+// Check if the columns have a "Date" column and disable it
+// This must be updated only by Admin
+const hasDateColumn = (columns) => {
+  columns.some((c) => {
+    const fieldName = c.field || c.name || ''
+    fieldName.toLowerCase() === 'data' || fieldName.toLowerCase() === 'date'
+    c.disable = true
+  })
+}
+
 onMounted(async () => {
   const id = route.params.id
   getSingleReportById(id)
@@ -207,17 +242,20 @@ onMounted(async () => {
 
       //Columns and Rows
       rows.value = response.report.fileRows || []
-      // columns.value = response.report.fileColumns || [];
+      columns.value = response.report.fileColumns || [];
       columns.value = (response.report.fileColumns || []).map((col) => ({
         align: 'left',
         ...col,
       }))
-      // columns.value = (response.report.fileColumns || [])
-      //   .filter((col) => !col?.permission || userPermissions.includes(col?.permission))
-      //   .map((col) => ({
+
+      // columns.value = (response.report.fileColumns || []).map((col) => {
+      //   const fieldName = (col.field || col.name || '').toLowerCase()
+      //   return {
       //     align: 'left',
       //     ...col,
-      //   }))
+      //     disable: fieldName === 'data' || fieldName === 'date',
+      //   }
+      // })
 
       // Emit the report name to the parent component
       const payload = {
@@ -225,10 +263,15 @@ onMounted(async () => {
         month: reportMonth.value,
       }
       emit('reportNameToParent', payload)
+
+      hasDateColumn(columns.value)
     })
     .catch((error) => {
       console.error(error)
     })
+
+  // Initialize cookie values
+  await initializeCookieValues()
 })
 
 defineExpose({

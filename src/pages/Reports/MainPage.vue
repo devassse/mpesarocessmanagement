@@ -93,7 +93,7 @@
                 name: 'ReportMaintenanceView',
                 params: { id: props.row.id },
               }"
-              v-if="isAdmin"
+              v-if="isAdmin || isEditor"
             >
             </q-btn>
             <q-btn
@@ -214,6 +214,8 @@ const expandedRow = ref(null)
 
 const isElectron = ref(false)
 const isAdmin = ref(false)
+const isEditor = ref(false)
+const isViewer = ref(false)
 const isAuditor = ref(false)
 
 const reportName = ref('')
@@ -344,6 +346,8 @@ const getCookie = async (name) => {
 const initializeCookieValues = async () => {
   isAdmin.value = (await getCookie('isAdmin')) === 'true'
   isAuditor.value = (await getCookie('isAuditor')) === 'true'
+  isEditor.value = (await getCookie('isEditor')) === 'true'
+  isViewer.value = (await getCookie('isViewer')) === 'true'
 }
 
 const fetchAllReports = () => {

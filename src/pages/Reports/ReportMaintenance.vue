@@ -88,7 +88,7 @@
       <q-tab-panels v-model="tab" animated>
         <q-tab-panel name="tables">
           <report-table
-            v-if="isAdmin"
+            v-if="isAdmin || isEditor"
             @report-name-to-parent="reportNameFromChild"
             ref="reportTableRef"
           />
@@ -117,6 +117,9 @@ import Cookies from 'js-cookie'
 
 const isElectron = ref(false)
 const isAdmin = ref(false)
+const isEditor = ref(false)
+const isViewer = ref(false)
+const isAuditor = ref(false)
 const tab = ref('tables')
 const reportTableRef = ref(null)
 
@@ -154,6 +157,9 @@ const getCookie = async (name) => {
 
 const initializeCookieValues = async () => {
   isAdmin.value = (await getCookie('isAdmin')) === 'true'
+  isAuditor.value = (await getCookie('isAuditor')) === 'true'
+  isEditor.value = (await getCookie('isEditor')) === 'true'
+  isViewer.value = (await getCookie('isViewer')) === 'true'
 }
 
 const monthOptions = [
