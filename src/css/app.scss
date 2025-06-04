@@ -1,11 +1,12 @@
 // app global css in SCSS form
 
+//Fix Issues with Camunda Modeler
 .djs-connection path {
     // stroke-width: 4 !important;
     pointer-events: none;
-  }
-  
-  .djs-connection.djs-hover path {
+}
+
+.djs-connection.djs-hover path {
     // stroke-width: 6 !important;
     pointer-events: none;
-  }
+}
