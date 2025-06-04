@@ -1,7 +1,5 @@
 <template>
   <div class="bg-accent">
-
-
   <q-header :class="$q.dark.isActive ? 'bg-dark' : 'bg-dark'">
     <q-toolbar>
       <q-btn flat @click="toggleDrawer"  style="rotate: 90deg;" round dense icon="leaderboard" />

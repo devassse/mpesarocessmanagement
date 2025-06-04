@@ -1,1 +1,11 @@
 // app global css in SCSS form
+
+.djs-connection path {
+    // stroke-width: 4 !important;
+    pointer-events: none;
+  }
+  
+  .djs-connection.djs-hover path {
+    // stroke-width: 6 !important;
+    pointer-events: none;
+  }

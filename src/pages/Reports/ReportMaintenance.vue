@@ -1,69 +1,71 @@
 <template>
-  <q-toolbar class="bg-black text-white">
-    <q-toolbar-title>
-      <span>
-        {{ reportNameChild || 'Report Name' }}
-        <q-popup-edit v-model="reportNameChild" auto-save v-slot="scope" v-if="isAdmin">
-          <q-input
-            type="textarea"
-            rows="3"
-            v-model="scope.value"
-            dense
-            autofocus
-            @keyup.enter="scope.set"
-          />
-        </q-popup-edit>
-      </span>
-      <em
-      >({{ reportMonthChild.toString() || ' --- ' }})
-        <q-popup-edit v-model="reportMonthChild" auto-save v-slot="scope" v-if="isAdmin">
-          <!-- <q-input type="textarea" rows="3" v-model="scope.value" dense autofocus @keyup.enter="scope.set" /> -->
-          <q-select
-            option-label="label"
-            option-value="value"
-            v-model="scope.value"
-            :options="monthOptions"
-            @keyup.enter="scope.set"
-            multiple
-            input-debounce="0"
-            emit-value
-          />
-        </q-popup-edit>
-      </em>
-    </q-toolbar-title>
-    <q-btn flat round dense icon="file_download" @click="exportToExcelOnChild">
-      <q-tooltip> Export File </q-tooltip>
-    </q-btn>
-    <q-btn v-if="isAdmin" flat round dense icon="person">
-      <q-badge floating color="red">2</q-badge>
-      <q-tooltip> 2 new modifications </q-tooltip>
-    </q-btn>
-    <q-btn
-      flat
-      round
-      dense
-      icon="table_rows"
-      class="q-mr-xs"
-      @click="addNewRowOnChild"
-      :disable="!isAdmin"
-    >
-      <q-tooltip> Add New Row </q-tooltip>
-    </q-btn>
-    <q-btn
-      flat
-      round
-      dense
-      icon="save"
-      class="q-mr-xs"
-      @click="saveUpdateReportOnChild"
-      :disable="!isAdmin"
-    >
-      <q-tooltip> Update Report </q-tooltip>
-    </q-btn>
-    <q-btn flat round dense to="/reports" icon="arrow_back">
-      <q-tooltip> Go back </q-tooltip>
-    </q-btn>
-  </q-toolbar>
+  <q-header elevated>
+    <q-toolbar class="bg-black text-white">
+      <q-toolbar-title>
+        <span>
+          {{ reportNameChild || 'Report Name' }}
+          <q-popup-edit v-model="reportNameChild" auto-save v-slot="scope" v-if="isAdmin">
+            <q-input
+              type="textarea"
+              rows="3"
+              v-model="scope.value"
+              dense
+              autofocus
+              @keyup.enter="scope.set"
+            />
+          </q-popup-edit>
+        </span>
+        <em
+          >({{ reportMonthChild.toString() || ' --- ' }})
+          <q-popup-edit v-model="reportMonthChild" auto-save v-slot="scope" v-if="isAdmin">
+            <!-- <q-input type="textarea" rows="3" v-model="scope.value" dense autofocus @keyup.enter="scope.set" /> -->
+            <q-select
+              option-label="label"
+              option-value="value"
+              v-model="scope.value"
+              :options="monthOptions"
+              @keyup.enter="scope.set"
+              multiple
+              input-debounce="0"
+              emit-value
+            />
+          </q-popup-edit>
+        </em>
+      </q-toolbar-title>
+      <q-btn flat round dense icon="file_download" @click="exportToExcelOnChild">
+        <q-tooltip> Export File </q-tooltip>
+      </q-btn>
+      <q-btn v-if="isAdmin" flat round dense icon="person">
+        <q-badge floating color="red">2</q-badge>
+        <q-tooltip> 2 new modifications </q-tooltip>
+      </q-btn>
+      <q-btn
+        flat
+        round
+        dense
+        icon="table_rows"
+        class="q-mr-xs"
+        @click="addNewRowOnChild"
+        :disable="!isAdmin"
+      >
+        <q-tooltip> Add New Row </q-tooltip>
+      </q-btn>
+      <q-btn
+        flat
+        round
+        dense
+        icon="save"
+        class="q-mr-xs"
+        @click="saveUpdateReportOnChild"
+        :disable="!isAdmin"
+      >
+        <q-tooltip> Update Report </q-tooltip>
+      </q-btn>
+      <q-btn flat round dense to="/reports" icon="arrow_back">
+        <q-tooltip> Go back </q-tooltip>
+      </q-btn>
+    </q-toolbar>
+  </q-header>
 
   <!-- Report Table -->
   <div class="q-pa-none">
@@ -85,7 +87,11 @@
       <q-separator />
       <q-tab-panels v-model="tab" animated>
         <q-tab-panel name="tables">
-          <report-table v-if="isAdmin" @report-name-to-parent="reportNameFromChild" ref="reportTableRef" />
+          <report-table
+            v-if="isAdmin"
+            @report-name-to-parent="reportNameFromChild"
+            ref="reportTableRef"
+          />
           <report-view v-else @report-name-to-parent="reportNameFromChild" />
         </q-tab-panel>
 
@@ -114,12 +120,12 @@ const isAdmin = ref(false)
 const tab = ref('tables')
 const reportTableRef = ref(null)
 
-const reportNameChild = ref('');  
+const reportNameChild = ref('')
 const reportMonthChild = ref('')
 
 const reportNameFromChild = (payload) => {
-  reportNameChild.value = payload.name;
-  reportMonthChild.value = payload.month;
+  reportNameChild.value = payload.name
+  reportMonthChild.value = payload.month
 }
 
 const addNewRowOnChild = () => {

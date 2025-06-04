@@ -1,5 +1,5 @@
 <template>
-  <div :id="`canvas${index}`" class="q-mt-xl" style="height: 450px; border-top: solid #dddddd 1px;"></div>
+  <div :id="`canvas${index}`" class="q-mt-xl" style="height: 450px; border-top: 1px solid #dddddd;"></div>
 </template>
 
 <script>

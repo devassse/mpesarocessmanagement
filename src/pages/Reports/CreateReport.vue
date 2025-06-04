@@ -563,7 +563,7 @@ const saveReport = async () => {
 const capitalize = (str) => str && str[0].toUpperCase() + str.slice(1).toLowerCase()
 </script>
 
-<style lang="sass">
+<style lang="sass" scoped>
 .sticky-header-table
   .q-table__top,
   thead tr:first-child th /* bg color is important for th; just specify one */

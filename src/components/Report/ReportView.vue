@@ -8,9 +8,10 @@
       :columns="columns"
       bordered
       virtual-scroll
-      :rows-per-page-options="[15]"
+      :rows-per-page-options="[15, 25, 0]"
       row-key="id"
       class="sticky-header-table"
+      :loading="!rows.length"
     >
       <template v-slot:body-cell-actions="props">
         <q-td :props="props">

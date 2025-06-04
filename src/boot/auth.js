@@ -95,6 +95,12 @@ const login = async ({ email, password }) => {
 const getCurrentUser = async (authToken) => {
   try {
     const response = await apiClient.get(`/auth/current-user?authToken=${authToken}`);
+
+    //Save User information on session storage
+    sessionStorage.setItem('currentUser', JSON.stringify(response.data));
+
+    console.log('Current user fetched successfully:', response.data);
+    
     return response.data;
   } catch (error) {
     console.error('Error fetching current user:', error.response ? error.response.data : error.message);

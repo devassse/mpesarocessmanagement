@@ -8,8 +8,9 @@
     row-key="id"
     bordered
     virtual-scroll
-    :rows-per-page-options="[15]"
+    :rows-per-page-options="[15, 25, 0]"
     class="sticky-header-table"
+    :loading="!rows.length"
   >
     <!-- Generic Slot for All Cells with Q-EDIT-POPUP -->
     <template v-slot:body-cell="props">
@@ -86,7 +87,7 @@ const removerLinha = (row, index) => {
   rows.value.splice(index, 1)
 }
 
-const saveUpdateReport = ({name, month}) => {
+const saveUpdateReport = ({ name, month }) => {
   const id = route.params.id
   const report = {
     reportName: name, // Name passed from parent component
@@ -97,8 +98,8 @@ const saveUpdateReport = ({name, month}) => {
 
   updateReport(id, report)
     .then((response) => {
-      console.log('report updated', response);
-      
+      console.log('report updated', response)
+
       $q.notify({
         color: 'positive',
         message: `${response?.message}` || 'Report updated successfully!',
@@ -241,23 +242,29 @@ defineExpose({
   max-width: 500px !important;
   white-space: normal !important;
 
-.sticky-header-table
+  .my-sticky-header-table
+  /* height or max-height is important */
+  height: 310px
+
   .q-table__top,
-  thead tr:first-child th /* bg color is important for th; just specify one */
-    background-color: #008081
-    color: #ffffff
+  .q-table__bottom,
+  thead tr:first-child th
+    /* bg color is important for th; just specify one */
+    background-color: #00b4ff
 
   thead tr th
     position: sticky
     z-index: 1
-  /* this will be the loading indicator */
-  thead tr:last-child th
-    /* height of all previous header rows */
-    top: 30px
   thead tr:first-child th
     top: 0
 
-  q-table thead tr,
-  .q-table tbody td
-    height: 30px;
+  /* this is when the loading indicator appears */
+  &.q-table--loading thead tr:last-child th
+    /* height of all previous header rows */
+    top: 48px
+
+  /* prevent scrolling behind sticky top row on focus */
+  tbody
+    /* height of all previous header rows */
+    scroll-margin-top: 48px
 </style>

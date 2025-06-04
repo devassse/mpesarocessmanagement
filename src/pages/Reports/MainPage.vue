@@ -26,7 +26,7 @@
     row-key="reportname"
     selection="single"
     :filter="filter"
-    :loading="loading"
+    :loading="loadingReports"
     :rows-per-page-options="[15]"
   >
     <template v-slot:top>
@@ -207,7 +207,7 @@ import Cookies from 'js-cookie'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
-const loading = ref(false)
+const loadingReports = ref(false)
 const filter = ref('')
 
 const expandedRow = ref(null)
@@ -223,6 +223,7 @@ const isDeleteReport = ref(false)
 const allGroups = ref([])
 const selectedReportGroups = ref({})
 const selectedRoles = ref(false)
+const loggedInUser = ref({})
 
 const communsRows = ref([])
 const columns = [
@@ -346,6 +347,7 @@ const initializeCookieValues = async () => {
 }
 
 const fetchAllReports = () => {
+  loadingReports.value = true
   getAllReports()
     .then((response) => {
       communsRows.value = response.reports
@@ -360,9 +362,23 @@ const fetchAllReports = () => {
           lastmodified: formatDate(row.updatedAt) || ' --- ',
         }
       })
+
+      //If user is Admin, show all reports
+      if (!isAdmin.value) {
+        //Filter the rows based on the logged-in user Department - Local Filter 
+        //TODO: Create a method on backend to filter by department
+        rows.value = rows.value.filter((row) => {
+          if (loggedInUser.value?.department) {
+            return row?.owner?.toLowerCase() === loggedInUser.value.department.toLowerCase()
+          }
+          return true // If no department, show all rows
+        })
+      }
+      loadingReports.value = false
     })
     .catch((error) => {
       console.error(error)
+      loadingReports.value = false
     })
 }
 
@@ -459,6 +475,9 @@ const checkReportRow = async (row, checked) => {
 }
 
 onMounted(async () => {
+  //Get information about the current user on session storage
+  loggedInUser.value = JSON.parse(sessionStorage.getItem('currentUser'))
+
   await initializeCookieValues()
   fetchAllReports()
   await fetchAllGroups()
