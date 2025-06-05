@@ -1,3 +1,8 @@
+// Server IPs for the application
+// const ip = "http://10.123.211.116:447";
+// export const ws_ip = "ws://10.123.211.116:447";
+
+// Localhost Use
 const ip = "http://localhost:3000";
 export const ws_ip = "ws://localhost:3000";
 

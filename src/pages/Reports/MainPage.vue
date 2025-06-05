@@ -359,11 +359,11 @@ const fetchAllReports = () => {
       rows.value = communsRows.value.map((row) => {
         return {
           id: row._id,
-          reportname: row.reportName || ' --- ',
-          month: row.reportMonth.toString() || ' --- ',
-          owner: row.reportDepartment.toString() || ' --- ',
-          createdat: formatDate(row.createdAt) || ' --- ',
-          lastmodified: formatDate(row.updatedAt) || ' --- ',
+          reportname: row?.reportName || ' --- ',
+          month: row?.reportMonth?.toString() || ' --- ',
+          owner: row?.reportDepartment?.toString() || ' --- ',
+          createdat: formatDate(row?.createdAt) || ' --- ',
+          lastmodified: formatDate(row?.updatedAt) || ' --- ',
         }
       })
 
@@ -371,12 +371,12 @@ const fetchAllReports = () => {
       if (!isAdmin.value) {
         //Filter the rows based on the logged-in user Department - Local Filter 
         //TODO: Create a method on backend to filter by department
-        rows.value = rows.value.filter((row) => {
-          if (loggedInUser.value?.department) {
-            return row?.owner?.toLowerCase() === loggedInUser.value.department.toLowerCase()
-          }
-          return true // If no department, show all rows
-        })
+        // rows.value = rows.value.filter((row) => {
+        //   if (loggedInUser.value?.department) {
+        //     return row?.owner?.toLowerCase() === loggedInUser.value.department.toLowerCase()
+        //   }
+        //   return true // If no department, show all rows
+        // })
       }
       loadingReports.value = false
     })

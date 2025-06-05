@@ -21,7 +21,7 @@
                 <template v-if="filterByDepartment" v-slot:append>
                   <q-icon
                     name="cancel"
-                    @click.stop.prevent="filterByDepartment = null"
+                    @click.stop.prevent="clearDepartmentFilter"
                     class="cursor-pointer"
                   />
                 </template>
@@ -44,7 +44,7 @@
     virtual-scroll
     :rows-per-page-options="[15, 25, 0]"
     class="sticky-header-table"
-    :loading="!rows.length"
+    :loading="loadingReportRows"
   >
     <!-- Generic Slot for All Cells with Q-EDIT-POPUP -->
     <template v-slot:body-cell="props">
@@ -138,6 +138,7 @@ const columns = ref([])
 const rows = ref([])
 
 const filterByDepartment = ref('')
+const loadingReportRows = ref(false)
 
 const isElectron = ref(false)
 const isAdmin = ref(false)
@@ -302,14 +303,24 @@ const filterRowsByDepartment = async () => {
   console.log('Filtering rows by department:', filterByDepartment.value)
 
   const filteredRows = rows.value.filter((row) => {
-    return row.department === filterByDepartment.value
+    console.log('Checking row:', row);
+    
+    return row?.department === filterByDepartment.value
   })
 
   rows.value = filteredRows
+  loadingReportRows.value = false
 }
 
-onMounted(async () => {
-  reportId.value = route.params.id
+const clearDepartmentFilter = async () => {
+  filterByDepartment.value = ''
+  rows.value = rows.value
+
+  await fetchReportData()
+}
+
+const fetchReportData = async () => {
+  loadingReportRows.value = true
   getSingleReportById(reportId.value)
     .then((response) => {
       //Atribute the response to the variables
@@ -332,10 +343,17 @@ onMounted(async () => {
       emit('reportNameToParent', payload)
 
       hasDateColumn(columns.value)
+      loadingReportRows.value = false
     })
     .catch((error) => {
       console.error(error)
+      loadingReportRows.value = false
     })
+}
+
+onMounted(async () => {
+  reportId.value = route.params.id
+  await fetchReportData()
 
   // Initialize cookie values
   await initializeCookieValues()

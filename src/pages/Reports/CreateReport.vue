@@ -157,7 +157,7 @@
                 size="xs"
                 class="q-ml-xs"
                 style="color: red; margin-top: -10px"
-                @click.stop="deleteColumn(col.name)"
+                @click.stop="deleteColumn(col?.name)"
               >
                 <q-tooltip>Delete Column - {{ col?.name }}</q-tooltip>
               </q-btn>
@@ -176,7 +176,7 @@
 
       <template
         v-for="col in dynamicColumns"
-        :key="col.name"
+        :key="col?.name"
         v-slot:[`body-cell-${col.name}`]="props"
       >
         <q-td :props="props">
