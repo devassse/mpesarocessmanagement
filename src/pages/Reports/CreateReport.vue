@@ -180,18 +180,50 @@
         v-slot:[`body-cell-${col.name}`]="props"
       >
         <q-td :props="props">
-          <!-- Render personalizado por coluna -->
-          {{ renderCell(col.name, props.row[col.field], props.row) || '---' }}
-          <q-popup-edit v-model="props.row[col.field]" auto-save v-slot="scope">
-            <q-input
-              type="textarea"
-              rows="3"
-              v-model="scope.value"
+          <!-- Validade CHIP according to Status -->
+          <div v-if="col.name === 'status'">
+            <q-chip v-if="props.row[col.field] === 'Open'" color="green" text-color="white" dense>
+              {{ props.row[col.field] }}
+            </q-chip>
+            <q-chip
+              v-else-if="props.row[col.field] === 'Closed'"
+              color="orange"
+              text-color="white"
               dense
-              autofocus
-              @keyup.enter="scope.set"
-            />
-          </q-popup-edit>
+            >
+              {{ props.row[col.field] }}
+            </q-chip>
+            <q-chip v-else-if="props.row[col.field] === 'Overdue'" color="red" text-color="white" dense>
+              {{ props.row[col.field] }}
+            </q-chip>
+            <span v-else>
+              {{ props.row[col.field] }}
+            </span>
+            <q-popup-edit v-model="props.row[col.field]" auto-save v-slot="scope">
+              <q-select
+                v-model="scope.value"
+                :options="statusOptions"
+                dense
+                emit-value
+                map-options
+                @keyup.enter="scope.set"
+              />
+            </q-popup-edit>
+          </div>
+          <!-- Senão, exibe o render cell habitual + popup edit -->
+          <div v-else>
+            {{ renderCell(col.name, props.row[col.field], props.row) || '---' }}
+            <q-popup-edit v-model="props.row[col.field]" auto-save v-slot="scope">
+              <q-input
+                type="textarea"
+                rows="3"
+                v-model="scope.value"
+                dense
+                autofocus
+                @keyup.enter="scope.set"
+              />
+            </q-popup-edit>
+          </div>
         </q-td>
       </template>
 
@@ -287,7 +319,7 @@ const addCustomColumn = () => {
     return
   }
 
-  // Adiciona nova coluna
+  // Add New Column
   importedFileColumns.value.splice(importedFileColumns.value.length - 1, 0, {
     name: colName,
     label: label,
@@ -314,21 +346,21 @@ const deleteColumn = (columnName) => {
 }
 
 const deptSelectOptions = [
-      { label: 'Compliance', value: 'Compliance' },
-      { label: 'Sales', value: 'Sales' },
-      { label: 'Marketing', value: 'Marketing' },
-      { label: 'Finance', value: 'Finance' },
-      { label: 'Operations', value: 'Operations' },
-      { label: 'Support', value: 'Support' },
-      { label: 'Technology', value: 'Technology' },
-      { label: 'Customer Service', value: 'Customer Service' },
-      { label: 'Human Resources', value: 'Human Resources' },
-      { label: 'IT', value: 'IT' },
-      { label: 'Core & Digital', value: 'Core & Digital' },
-      { label: 'Risk', value: 'Risk' },
-      { label: 'Business & Payments', value: 'Business & Payments' },
-      { label: 'Financial Services', value: 'Financial Services' },
-    ]
+  { label: 'Compliance', value: 'Compliance' },
+  { label: 'Sales', value: 'Sales' },
+  { label: 'Marketing', value: 'Marketing' },
+  { label: 'Finance', value: 'Finance' },
+  { label: 'Operations', value: 'Operations' },
+  { label: 'Support', value: 'Support' },
+  { label: 'Technology', value: 'Technology' },
+  { label: 'Customer Service', value: 'Customer Service' },
+  { label: 'Human Resources', value: 'Human Resources' },
+  { label: 'IT', value: 'IT' },
+  { label: 'Core & Digital', value: 'Core & Digital' },
+  { label: 'Risk', value: 'Risk' },
+  { label: 'Business & Payments', value: 'Business & Payments' },
+  { label: 'Financial Services', value: 'Financial Services' },
+]
 
 const monthSelectOptions = [
   {
@@ -381,6 +413,11 @@ const monthSelectOptions = [
   },
 ]
 
+const statusOptions = [
+  { label: 'Open', value: 'Open' },
+  { label: 'Closed', value: 'Closed' },
+  { label: 'Overdue', value: 'Overdue' },
+]
 const monthOptions = ref(monthSelectOptions)
 const filterFn = (val, update) => {
   if (val === '') {
@@ -463,8 +500,19 @@ const handleFileUpload = (file) => {
       label: capitalize(col),
       field: String(col).toLowerCase(),
       align: 'left' || '',
-      user_ids: []
+      user_ids: [],
     }))
+
+    // Check if the 'status' column already exists
+    // If the 'status' column does not exist, add it
+    if (!importedFileColumns.value.find((col) => col.name === 'status')) {
+      importedFileColumns.value.push({
+        name: 'status',
+        label: 'Status',
+        field: 'status',
+        align: 'right',
+      })
+    }
 
     // Add a static column at the end
     importedFileColumns.value.push({
@@ -483,6 +531,11 @@ const handleFileUpload = (file) => {
       importedFileColumns.value.forEach((col, colIndex) => {
         // If the value is empty, fill it with an empty string with dashes(" --- ")
         rowData[col.field] = row[colIndex] || ' --- ' // Replace empty cells with an empty string
+
+        // If the column is 'status', set a default value of 'Open'
+        if (col.name === 'status') {
+          rowData[col.field] = rowData[col.field] || 'Open'
+        }
       })
       return { id: index + 1, ...rowData }
     })
@@ -550,7 +603,7 @@ const saveReport = async () => {
     // Redirecionar após sucesso
     window.location.href = '#/reports'
   } catch (error) {
-    console.error('Error creating report:', response.value)
+    console.error('Error creating report:', response)
     $q.notify({
       color: 'negative',
       message: response.value || 'Failed to create Report. Please try again.',

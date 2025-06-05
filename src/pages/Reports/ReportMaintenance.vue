@@ -86,7 +86,7 @@
       </q-tabs>
       <q-separator />
       <q-tab-panels v-model="tab" animated>
-        <q-tab-panel name="tables">
+        <q-tab-panel class="q-pa-sm" name="tables">
           <report-table
             v-if="isAdmin || isEditor"
             @report-name-to-parent="reportNameFromChild"
@@ -99,7 +99,7 @@
           <report-summary />
         </q-tab-panel>
 
-        <q-tab-panel name="graphs">
+        <q-tab-panel name="graphs" class="q-pa-sm" >
           <report-graphs />
         </q-tab-panel>
       </q-tab-panels>

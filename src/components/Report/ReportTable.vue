@@ -1,4 +1,38 @@
 <template>
+  <!-- Filters -->
+  <q-list bordered class="q-pa-xs q-mb-sm">
+    <q-expansion-item dense dense-toggle expand-separator icon="search" label="Filters">
+      <q-card>
+        <q-card-section>
+          <div class="row">
+            <div class="col-3">
+              <q-select
+                flat
+                dense
+                v-model="filterByDepartment"
+                :options="deptSelectOptions"
+                map-options
+                emit-value
+                option-label="label"
+                option-value="value"
+                label="Department"
+                @update:model-value="filterRowsByDepartment"
+              >
+                <template v-if="filterByDepartment" v-slot:append>
+                  <q-icon
+                    name="cancel"
+                    @click.stop.prevent="filterByDepartment = null"
+                    class="cursor-pointer"
+                  />
+                </template>
+              </q-select>
+            </div>
+          </div>
+        </q-card-section>
+      </q-card>
+    </q-expansion-item>
+  </q-list>
+  <!-- End Filters -->
   <!-- Report Table -->
   <q-table
     flat
@@ -28,6 +62,23 @@
                 :disable="props.col.disable && !isAdmin"
               />
             </template>
+            <template v-else-if="props.col.name === 'status'">
+              <q-select
+                flat
+                dense
+                v-model="scope.value"
+                :options="[
+                  { label: 'Open', value: 'Open' },
+                  { label: 'Closed', value: 'Closed' },
+                  { label: 'Overdue', value: 'Overdue' },
+                ]"
+                @keyup.enter="scope.set"
+                option-label="label"
+                option-value="value"
+                emit-value
+                :disable="!isAdmin"
+              />
+            </template>
             <template v-else>
               <q-input
                 :type="getFieldType(props.col.name) === 'number' ? 'number' : 'textarea'"
@@ -40,6 +91,16 @@
             </template>
           </q-popup-edit>
         </template>
+        <!-- Status Column -->
+        <template v-else-if="props.col.name == 'status'">
+          <q-chip v-if="props.row.status === 'Open'" color="green" text-color="white" dense>
+            {{ props.row.status }}
+          </q-chip>
+          <span v-else>
+            {{ props.row.status }}
+          </span>
+        </template>
+        <!--/ End Status Column -->
         <!-- Actions Column -->
         <template v-else>
           <q-btn
@@ -53,6 +114,7 @@
             :disable="!isAdmin"
           />
         </template>
+        <!--/ End Actions Column -->
       </q-td>
     </template>
   </q-table>
@@ -68,18 +130,20 @@ import Cookies from 'js-cookie'
 
 const $q = useQuasar()
 const route = useRoute()
+const reportId = ref('')
 const reportName = ref('')
 const reportMonth = ref('')
 
 const columns = ref([])
 const rows = ref([])
 
+const filterByDepartment = ref('')
+
 const isElectron = ref(false)
 const isAdmin = ref(false)
 const isEditor = ref(false)
 const isViewer = ref(false)
 const isAuditor = ref(false)
-
 
 const getCookie = async (name) => {
   if (isElectron.value) {
@@ -95,7 +159,6 @@ const initializeCookieValues = async () => {
   isEditor.value = (await getCookie('isEditor')) === 'true'
   isViewer.value = (await getCookie('isViewer')) === 'true'
 }
-
 
 const emit = defineEmits(['reportNameToParent'])
 
@@ -123,8 +186,6 @@ const saveUpdateReport = ({ name, month }) => {
 
   updateReport(id, report)
     .then((response) => {
-      console.log('report updated', response)
-
       $q.notify({
         color: 'positive',
         message: `${response?.message}` || 'Report updated successfully!',
@@ -232,9 +293,24 @@ const hasDateColumn = (columns) => {
   })
 }
 
+const filterRowsByDepartment = async () => {
+  if (!filterByDepartment.value) {
+    rows.value = rows.value // Reset to original rows if no filter
+    return
+  }
+
+  console.log('Filtering rows by department:', filterByDepartment.value)
+
+  const filteredRows = rows.value.filter((row) => {
+    return row.department === filterByDepartment.value
+  })
+
+  rows.value = filteredRows
+}
+
 onMounted(async () => {
-  const id = route.params.id
-  getSingleReportById(id)
+  reportId.value = route.params.id
+  getSingleReportById(reportId.value)
     .then((response) => {
       //Atribute the response to the variables
       reportName.value = response.report.reportName || ''
@@ -242,20 +318,11 @@ onMounted(async () => {
 
       //Columns and Rows
       rows.value = response.report.fileRows || []
-      columns.value = response.report.fileColumns || [];
+      columns.value = response.report.fileColumns || []
       columns.value = (response.report.fileColumns || []).map((col) => ({
         align: 'left',
         ...col,
       }))
-
-      // columns.value = (response.report.fileColumns || []).map((col) => {
-      //   const fieldName = (col.field || col.name || '').toLowerCase()
-      //   return {
-      //     align: 'left',
-      //     ...col,
-      //     disable: fieldName === 'data' || fieldName === 'date',
-      //   }
-      // })
 
       // Emit the report name to the parent component
       const payload = {
@@ -273,6 +340,23 @@ onMounted(async () => {
   // Initialize cookie values
   await initializeCookieValues()
 })
+
+const deptSelectOptions = [
+  { label: 'Compliance', value: 'Compliance' },
+  { label: 'Sales', value: 'Sales' },
+  { label: 'Marketing', value: 'Marketing' },
+  { label: 'Finance', value: 'Finance' },
+  { label: 'Operations', value: 'Operations' },
+  { label: 'Support', value: 'Support' },
+  { label: 'Technology', value: 'Technology' },
+  { label: 'Customer Service', value: 'Customer Service' },
+  { label: 'Human Resources', value: 'Human Resources' },
+  { label: 'IT', value: 'IT' },
+  { label: 'Core & Digital', value: 'Core & Digital' },
+  { label: 'Risk', value: 'Risk' },
+  { label: 'Business & Payments', value: 'Business & Payments' },
+  { label: 'Financial Services', value: 'Financial Services' },
+]
 
 defineExpose({
   addNewRow,
